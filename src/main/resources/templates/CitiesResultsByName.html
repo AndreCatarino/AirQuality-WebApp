@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+
+    <title>Air Quality WebApp</title>
+
+
+
+    <!--Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+
+    <meta http-equiv="refresh" content="5" /> <!-- web page refresh -->
+
+    <!-- jQuery library -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <!-- Popper JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <!-- Latest compiled JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+
+
+
+    <script>
+
+
+        function token() {
+            return "abc94ddd457d58241e7abae33fd2721b0fb00251";
+        }
+        function postData(id, name, co, h, dew, no2, o3, p, pm10, pm25, so2, t, w, wg, r){
+            fetch('http://localhost:8080/Cities', {
+                method: 'POST',
+                body:JSON.stringify({"id":id,
+                    "name":name,
+                    "co":co,
+                    "h":h,
+                    "d":dew,
+                    "no2":no2,
+                    "o3":o3,
+                    "p":p,
+                    "pm10":pm10,
+                    "pm25":pm25,
+                    "so2":so2,
+                    "t":t,
+                    "w":w,
+                    "wg":wg,
+                    "r":r,
+                }),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }).then((res) => res.text())
+                .then((text)=>console.log("text:"+ text))
+                .catch((err)=>console.log("err:" + err))
+        }
+        function get_specific_data_from_station(station_name, uid){
+            let string = 'https://api.waqi.info/feed/@'+uid+'/?token='+token()
+            let request_specific = new XMLHttpRequest()
+            request_specific.open('GET', string, true)
+            request_specific.onload = function() {
+                let val = JSON.parse(this.response)
+                //console.log(val);
+                if (request_specific.status == 200 ) {
+                    let co_value;
+                    let dew_value;
+                    let h_value;
+                    let no2_value;
+                    let o3_value;
+                    let p_value;
+                    let p10_value;
+                    let p25_value;
+                    let so2_value;
+                    let t_value;
+                    let w_value;
+                    let wg_value;
+                    let r_value;
+
+
+
+                    if (val.data.iaqi) {
+
+                        if (val.data.iaqi.co && val.data.iaqi.co['v']) {
+                            co_value=val.data.iaqi.co["v"];
+                        }
+                        if (val.data.iaqi.r && val.data.iaqi.r['v']) {
+                            r_value=val.data.iaqi.r["v"];
+                        }
+                        if (val.data.iaqi.d && val.data.iaqi.d['v']) {
+                            dew_value=val.data.iaqi.d["v"];
+                        }
+                        if (val.data.iaqi.h && val.data.iaqi.h['v']) {
+                            h_value=val.data.iaqi.h["v"];
+                        }
+                        if (val.data.iaqi.no2 && val.data.iaqi.no2['v']) {
+                            no2_value=val.data.iaqi.no2["v"];
+                        }
+                        if (val.data.iaqi.o3 && val.data.iaqi.o3['v']) {
+                            o3_value=val.data.iaqi.o3["v"];
+                        }
+                        if (val.data.iaqi.p && val.data.iaqi.p['v']) {
+                            p_value=val.data.iaqi.p["v"];
+                        }
+                        if (val.data.iaqi.pm10 && val.data.iaqi.pm10['v']) {
+                            p10_value=val.data.iaqi.pm10["v"];
+                        }
+                        if (val.data.iaqi.pm25 && val.data.iaqi.pm25['v']) {
+                            p25_value=val.data.iaqi.pm25["v"];
+                        }
+                        if (val.data.iaqi.so2 && val.data.iaqi.so2['v']) {
+                            so2_value=val.data.iaqi.so2["v"];
+                        }
+                        if (val.data.iaqi.t && val.data.iaqi.t['v']) {
+                            t_value=val.data.iaqi.t["v"];
+                        }
+                        if (val.data.iaqi.w && val.data.iaqi.w['v']) {
+                            w_value=val.data.iaqi.w["v"];
+                        }
+                        if (val.data.iaqi.wg && val.data.iaqi.wg['v']) {
+                            wg_value=val.data.iaqi.wg["v"];
+                        }
+                        postData(uid, station_name, co_value, h_value, dew_value, no2_value, o3_value, p_value, p10_value, p25_value, so2_value, t_value,  w_value, wg_value, r_value)
+                    }
+
+                }
+            }
+            request_specific.send()
+
+        }
+        function get_data_from_all_stations(idk) {
+            let string = 'https://api.waqi.info/search/?token='+token()+'&idk='+idk
+            let request = new XMLHttpRequest()
+            request.open('GET', string, true)
+            request.onload = function() {
+                // Begin accessing JSON data here
+                let response = JSON.parse(this.response)
+                //console.log(response);
+
+                if (request.status == 200 ) {
+                    //console.log(request.responseText);
+                    response.data.forEach(ci => {
+                        //console.log(ci.station.name)
+                        //console.log(ci.uid)
+                        get_specific_data_from_station(ci.station.name, ci.uid);
+                    })
+                }
+            }
+            request.send()
+        }
+
+    </script>
+
+</head>
+
+<body style="background-color: #A4A4A4">
+<!-- Black with white text -->
+<nav class="navbar navbar-expand-sm bg-dark navbar-dark">
+    <ul class="navbar-nav">
+        <li class="nav-item active">
+            <a class="nav-link">AirQuality</a>
+        </li>
+
+    </ul>
+</nav>
+
+<div style="opacity: 0">
+    <td id="idk" th:text="${name}"></td>
+</div>
+<script th:inline="javascript">
+    var name = [[${name}]];
+    get_data_from_all_stations(name);
+
+</script>\
+
+<div class="container" style="display:inline-block;">
+
+    <div th:if="${cityDataRepositoryByName.empty}"  style="color: white; background-color: darkslategray">
+        <span> No data available at this time </span>
+    </div>
+
+
+    <div th:if="${!cityDataRepositoryByName.empty}"  style="color: white;">
+
+        <h1 style="color: white">All Stations</h1>
+        <table style="color: white; background-color: darkgrey" border=1 frame=hsides rules=rows>
+            <thead>
+            <th  style="padding:0 15px 0 15px;">Name</th>
+            <th style="padding:0 15px 0 15px;">Id</th>
+            <th style="padding:0 15px 0 15px;">PM<sub>10</sub></th>
+            <th style="padding:0 15px 0 15px;">PM<sub>2.5</sub></th>
+            <th style="padding:0 15px 0 15px;">Atmostpheric Pressure</th>
+            <th style="padding:0 15px 0 15px;">Ozone</th>
+            <th style="padding:0 15px 0 15px;">Nitrogen Dioxide</th>
+            <th style="padding:0 15px 0 15px;">Sulphur Dioxide</th>
+            <th style="padding:0 15px 0 15px;">Carbon Monoxyde</th>
+            <th style="padding:0 15px 0 15px;">Temperature</th>
+            <th style="padding:0 15px 0 15px;">Wind</th>
+            <th style="padding:0 15px 0 15px;">Rain</th>
+            <th style="padding:0 15px 0 15px;">Relative Humidity</th>
+            <th style="padding:0 15px 0 15px;">Dew</th>
+            </thead>
+            <tr th:each="CityDataObject : ${cityDataRepositoryByName}" class="element">
+                <td th:text="${CityDataObject.name}" style="padding:0 15px 0 15px;"></td>
+                <td class="Id" th:text="${CityDataObject.id}" style="font-weight: bold; text-decoration: underline; padding:0 15px 0 15px;"> </td>
+                <td th:text="${CityDataObject.pm10}" style="padding:0 15px 0 15px;"></td>
+                <td th:text="${CityDataObject.pm25}" style="padding:0 15px 0 15px;"></td>
+                <td th:text="${CityDataObject.p}" style="padding:0 15px 0 15px;"></td>
+                <td th:text="${CityDataObject.o3}" style="padding:0 15px 0 15px;"></td>
+                <td th:text="${CityDataObject.no2}" style="padding:0 15px 0 15px;"></td>
+                <td th:text="${CityDataObject.so2}" style="padding:0 15px 0 15px;"></td>
+                <td th:text="${CityDataObject.co}" style="padding:0 15px 0 15px;"></td>
+                <td th:text="${CityDataObject.t}" style="padding:0 15px 0 15px;"></td>
+                <td th:text="${CityDataObject.w}" style="padding:0 15px 0 15px;"></td>
+                <td th:text="${CityDataObject.r}" style="padding:0 15px 0 15px;"></td>
+                <td th:text="${CityDataObject.d}" style="padding:0 15px 0 15px;"></td>
+
+            </tr>
+        </table>
+    </div>
+
+
+
+
+</div>
+
+</body>
+
+<script>
+    $(".element").click(function(){
+        var pId = $(this).find(".Id").text();
+        if ( pId ){
+            window.location = "/City/"+pId;
+        }
+
+    });
+</script>
+</html>
